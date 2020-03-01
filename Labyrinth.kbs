@@ -54,13 +54,17 @@ editvisible false
 
 istLabyOk = false
 while istLabyOk = false
-	labyname$ = keyinput$("Welches Labyrinth (D/P)? ")
+	labyname$ = keyinput$("Welches Labyrinth (A/P/U)? ")
 	if labyname$ = "P" then
 		call labyPhoyh
 		istLabyOk = true
 	endif
 	if labyname$ = "A" then
 		call labyM1ngX1ao
+		istLabyOk = true
+	endif
+	if labyname$ = "U" then
+		call labyM1ngXU
 		istLabyOk = true
 	endif
 endwhile
@@ -517,3 +521,53 @@ objektGewonnen[4] = true
 gewonnenBeschreibung$ = "Mit dem Schlüssel machst du das Gitter auf, da wo die Prinzessin eingefangen wurde. Sie ist super glücklich. Ihr geht zurück ins Königreich und habt zusammen ein schönes Leben!"
 endsubroutine
 
+subroutine labyM1ngXU()
+breite=5
+hoehe=5
+call labyInit
+x=1
+y=1
+kraft=0
+ausdauer=0
+hatMauerO[0,3] = true
+hatMauerO[1,3] = true
+hatMauerO[2,3] = true
+hatMauerO[3,3] = true
+hatMauerO[4,3] = true
+hatMauerO[4,0] = true
+hatMauerO[4,1] = true
+hatMauerO[4,2] = true
+hatMauerS[3,0] = true
+hatMauerS[1,1] = true
+hatMauerS[2,2] = true
+hatMauerS[3,3] = true
+hatMauerS[0,4] = true
+hatMauerS[1,4] = true
+hatMauerS[2,4] = true
+knopf[0,4] = 1
+knopf[1,4] = 2
+knopf[2,4] = 3
+knopf[3,4] = 4
+knopf[4,4] = 5
+knopf[
+knopfMauerWegX[1] = 4
+knopfMauerWegY[1] = 0
+knopfMauerWegIstS[1] = true
+knopfMauerHinX[1] = 3
+knopfMauerHinY[1] = 0
+knopfMauerHinIstO[1] = true
+
+knopfMauerWegX[2] = 4
+knopfMauerWegY[2] = 1
+knopfMauerWegIstS[2] = true
+knopfMauerWegX[3] = 4
+knopfMauerWegY[3] = 2
+knopfMauerWegIstS[3] = true
+knopfMauerWegX[4] = 4
+knopfMauerWegY[4] = 3
+knopfMauerWegIstS[4] = true
+
+knopfMauerWegX[5] = 0
+knopfMauerWegY[5] = 3
+knopfMauerWegIstO[5] = true
+endsubroutine
