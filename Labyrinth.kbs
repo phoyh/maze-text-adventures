@@ -29,6 +29,10 @@ global ausdauer
 global x
 global y
 global gewonnenBeschreibung$
+global callback
+global startedMsec
+
+startedMsec = -1
 
 dim gegnerKraft(100)
 dim gegnerAusdauer(100)
@@ -51,7 +55,7 @@ dim knopfMauerWegIstS(100)
 
 outputvisible true
 editvisible false
-
+graphvisible false
 istLabyOk = false
 while istLabyOk = false
 	labyname$ = keyinput$("Welches Labyrinth (A/P/U)? ")
@@ -63,7 +67,7 @@ while istLabyOk = false
 		call labyM1ngX1ao
 		istLabyOk = true
 	endif
-	if labyname$ = "U" then
+	if labyname$ = "M" then
 		call labyM1ngXU
 		istLabyOk = true
 	endif
@@ -82,10 +86,14 @@ call zeigeKnopf
 call zeigeObjekt
 call zeigeWahl
 call macheWahl
+call update
 endwhile
 
 rem subroutines / functions
 
+subroutine macheCallbacks()
+	if callback[x, y] > 3 or callback[x, y] = 1 then call CallBacks(callback[x, y])
+endsubroutine
 subroutine zeigeRaum()
 if raumBeschreibung$[x,y] = "" then return
 print raumBeschreibung$[x,y]
@@ -143,7 +151,7 @@ if gA > 0 then
 	print
 endif
 endwhile
-if ausdauer < 1 then call tod
+if ceil(ausdauer) < 1 then call tod
 gegner[x,y] = 0
 print "Den Schlag hast du mit besonders viel Kraft gemacht. Du warst einfach zu motiviert. Du hast gegen ihn gewonnen!!!!!!!"
 p$ = keyinput$("")
@@ -157,10 +165,22 @@ if kannN() then print " N";
 if kannO() then print " O";
 if kannS() then print " S";
 if kannW() then print " W";
+if kannH() then print " H";
+if kannR() then print " R";
 if objekt[x,y] > 0 then print " NIMM";
 if knopf[x,y] > 0 then print " BENUTZE";
 print 
 endsubroutine
+
+function kannH()
+	if callback[x, y] = 3 then return true
+	return false
+endfunction
+
+function kannR()
+	if callback[x, y] = 2 then return true
+	return false
+endfunction
 
 subroutine macheWahl()
 wahl$ = keyinput$("Deine Wahl: ")
@@ -181,6 +201,14 @@ if kannO() and wahl$ = "O" then
 	x = x + 1
 	istWahlOk = true
 endif
+if kannH() and wahl$ = "H" then
+	call CallBacks(3)
+	istWahlOk = true
+endif
+if kannR() and wahl$ = "R" then
+	call CallBacks(2)
+	istWahlOk = true
+endif
 if objekt[x,y] > 0 and wahl$ = "NIMM" then
 	call nimmObjekt
 	istWahlOk = true
@@ -189,7 +217,11 @@ if knopf[x,y] > 0 and wahl$ = "BENUTZE" then
 	call benutzeKnopf
 	istWahlOk = true
 endif
-if istWahlOk = false then p$ = keyinput$("Das geht nicht!!!")
+if istWahlOk = false then
+	p$ = keyinput$("Das geht nicht!!!")
+else
+	call macheCallbacks
+endif
 endsubroutine
 
 subroutine nimmObjekt()
@@ -300,6 +332,7 @@ function keyinput$(p$)
 	lastChar = 0
 	print p$;
 	while k <> 16777220 #RETURN
+call update
 		k = key
 		if k = 0 then
 			lastChar = 0
@@ -346,6 +379,7 @@ dim raumBeschreibung$(breite, hoehe)
 dim gegner(breite, hoehe)
 dim objekt(breite, hoehe)
 dim knopf(breite, hoehe)
+dim callback(breite, hoehe)
 endsubroutine
 
 subroutine labyPhoyh()
@@ -522,41 +556,67 @@ gewonnenBeschreibung$ = "Mit dem Schlüssel machst du das Gitter auf, da wo die 
 endsubroutine
 
 subroutine labyM1ngXU()
-breite=5
+breite=16
 hoehe=5
 call labyInit
+print "Es ist abends, bald Sonnenuntergang ";
+pause 1
+print ".";
+pause 0.5
+print ".";
+pause 0.5
+print "."
+pause 0.5
 x=1
 y=1
 kraft=0
-ausdauer=0
-hatMauerO[0,3] = true
-hatMauerO[1,3] = true
-hatMauerO[2,3] = true
-hatMauerO[3,3] = true
-hatMauerO[4,3] = true
-hatMauerO[4,0] = true
-hatMauerO[4,1] = true
-hatMauerO[4,2] = true
-hatMauerS[3,0] = true
-hatMauerS[1,1] = true
-hatMauerS[2,2] = true
-hatMauerS[3,3] = true
-hatMauerS[0,4] = true
-hatMauerS[1,4] = true
-hatMauerS[2,4] = true
-knopf[0,4] = 1
-knopf[1,4] = 2
-knopf[2,4] = 3
-knopf[3,4] = 4
+ausdauer=1
+for i = 1 to int(breite / 5) - 1
+	for j = 0 to hoehe - 1
+		hatMauerO[i * 5 - 1, j] = true
+	next j
+next i
+for i = 0 to breite - 1
+	hatMauerS[i, 3] = true
+next i
+hatMauerS[0,0] = true
+hatMauerS[0,1] = true
+hatMauerS[5,0] = true
+hatMauerS[5,1] = true
+hatMauerS[10,0] = true
+hatMauerS[10,1] = true
+hatMauerS[3,2] = true
+for i = 0 to hoehe - 1
+	hatMauerO[3, i] = true
+	hatMauerS[4, i] = true
+next i
+knopf[4,0] = 1
+knopf[4,1] = 2
+knopf[4,2] = 3
+knopf[4,3] = 4
 knopf[4,4] = 5
-knopf[
+knopf[5,3] = 6
+knopf[2, 4] = 7
+knopf[8, 0] = 8
+knopf[9, 1] = 8
+knopfMauerHinX[8] = 14
+knopfMauerHinY[8] = 3
+knopfMauerHinIstS[8] = true
+knopfMauerWegX[6] = 14
+knopfMauerWegY[6] = 3
+knopfMauerWegIstS[6] = true
+knopfMauerWegX[7] = 3
+knopfMauerWegY[7] = 0
+knopfMauerWegIstO[7] = true
 knopfMauerWegX[1] = 4
 knopfMauerWegY[1] = 0
 knopfMauerWegIstS[1] = true
 knopfMauerHinX[1] = 3
 knopfMauerHinY[1] = 0
 knopfMauerHinIstO[1] = true
-
+for i = 0 to knopfBeschreibung$[?] - 1
+	knopfBeschreibung$[i] = "Da ist ein Hebel zum umlegen."
+next i
 knopfMauerWegX[2] = 4
 knopfMauerWegY[2] = 1
 knopfMauerWegIstS[2] = true
@@ -567,7 +627,187 @@ knopfMauerWegX[4] = 4
 knopfMauerWegY[4] = 3
 knopfMauerWegIstS[4] = true
 
-knopfMauerWegX[5] = 0
-knopfMauerWegY[5] = 3
+knopfMauerWegX[5] = 3
+knopfMauerWegY[5] = 0
 knopfMauerWegIstO[5] = true
+
+callback[0, 1] = 1
+callback[5, 1] = 9
+callback[0, 0] = 2
+callback[9, 0] = 2
+callback[3, 4] = 2
+callback[5, 4] = 2
+callback[10, 4] = 3
+callback[8, 4] = 3
+callback[5, 0] = 3
+callback[14, 0] = 3
+callback[8, 4] = 3
+callback[0, 3] = 4
+hatMauerO[0, 3] = true
+callback[1, 4] = 5
+callback[10, 1] = 6
+callback[3, 3] = 7
+callback[4, 3] = 8
+
+gegner[3, 3] = 1
+gegnerName$[1] = "Darth Vader"
+gegnerBeschreibung$[1] = "Darth Vader steht vor Dir und macht mit seinem rotem Laserschwert 20 Schaden und hat wegen der Macht 999999 Leben."
+gegnerKraft[1] = 20
+gegnerAusdauer[1] = 999999
+
+raumBeschreibung$[3, 3] = "Ein Schlüssel ist am Mantel von Darth Vader - hab ihn!"
+
+objekt[4, 3] = 1
+objekt[9, 4] = 2
+objekt[x + 5, y] = 3
+
+objektKraftBonus[1] = 499999
+objektName$[1] = "Laserschwert"
+objektBeschreibung$[1] = "Du siehst ein Laserschwert an der Decke. Es ist an einer Zeitbombe befestigt, die beim entfernen explodiert. Wahrscheinlich müsste man in 10 Sekunden aus dem Raum sein oder bumm..."
+objektAusdauerBonus[2] = 19.9000001
+objektName$[2] = "Lebenstrank"
+objektBeschreibung$[2] = "Auf dem Boden liegt ein Lebenstrank."
+objektKraftBonus[3] = 1
+objektName$[3] = "Gruselige Maske"
+objektBeschreibung$[3] = "An der Wand hängt eine gruselige Maske. Tippe W um die Maske (evtl.) genauer am Grafikfenster anzusehen (USK ab 16 Jahren)."
+
+raumBeschreibung$[1,1] = "Die Sonne scheint durch einen offenen Balkon. Man sollte aufpassen ..."
+raumBeschreibung$[6, 1] = raumBeschreibung$[1,1]
+raumBeschreibung$[11, 1] = "Im Westen ist eine verschlossene Tür."
+raumBeschreibung$[1, 0] = "Im Westen ist eine Treppe nach unten."
+raumBeschreibung$[0, 0] = "Du bist im 2. Stock!"
+raumBeschreibung$[5, 0] = "Du bist im 1. Stock!"
+raumBeschreibung$[9, 0] = raumBeschreibung$[5, 0]
+raumBeschreibung$[5, 1] = "Im Norden ist eine Treppe nach oben."
+raumBeschreibung$[6, 0] = "Im Westen ist eine Treppe nach oben."
+raumBeschreibung$[8, 0] = "Im Osten ist eine Treppe nach unten."
+raumBeschreibung$[9, 1] = "Im Norden ist eine Treppe nach unten."
+raumBeschreibung$[13, 0] = "Im Osten ist eine Treppe nach oben."
+raumBeschreibung$[2, 4] = raumBeschreibung$[8, 0]
+raumBeschreibung$[7, 4] = raumBeschreibung$[13, 0]
+raumBeschreibung$[9, 4] = raumBeschreibung$[6, 0]
+raumBeschreibung$[6, 4] = raumBeschreibung$[1, 0]
+raumBeschreibung$[11, 4] = raumBeschreibung$[6, 0]
+raumBeschreibung$[15, 0] = raumBeschreibung$[6, 0]
+raumBeschreibung$[14, 1] = raumBeschreibung$[5, 1]
+raumBeschreibung$[14, 0] = "Du bist im Erdgeschoss!"
+raumBeschreibung$[5, 4] = raumBeschreibung$[5, 0]
+raumBeschreibung$[8, 4] = raumBeschreibung$[5, 0]
+raumBeschreibung$[3, 4] = raumBeschreibung$[0, 0]
+raumBeschreibung$[10, 4] = raumBeschreibung$[14, 0]
+endsubroutine
+
+subroutine CallBacks(number) 
+	if number = 1 or number = 9 then
+		print "Du *****! Du bist aus dem " + (2 - int(x / 5)) + ". Stock gesprungen!"
+		if number = 9 and not (kraft = 1 or kraft = 500000)  then
+			pause 2
+			clg
+			outputvisible false
+			graphvisible true
+			imgload graphwidth / 2, graphheight / 2, "smiley"
+			color black
+			font "Tahoma",20,60
+			text graphwidth / 10, graphheight / 2 - 35, "Du wolltest mich"
+			text graphwidth / 8, graphheight / 2 + 15, "sehen - hier:"
+			pause 5
+			outputvisible true
+			graphvisible false
+			cls
+			print "Tod bist du aber trotzdem! - HAHA"
+		endif
+		end
+	endif
+	if number = 2 then
+		print "Du läufst die Treppe runter ";
+		print ".";
+		pause 0.5
+		print ".";
+		pause 0.5
+		print "."
+		pause 0.5
+		x += 5
+	endif
+	if number = 3 then
+		print "Du läufst die Treppe hoch ";
+		print ".";
+		pause 0.5
+		print ".";
+		pause 0.5
+		print "."
+		pause 0.5
+		x -= 5
+	endif
+	if number = 4 then
+		print "Ein Wächter mit Maschinengewehr ..."
+		pause 1
+		print "Schnell weg hier ";
+		print ".";
+		pause 0.5
+		print ".";
+		pause 0.5
+		print "."
+		pause 0.5
+		y -= 1
+	endif
+	if number = 5 then
+		print "Ein Wächter mit Maschinengewehr ..."
+		pause 1
+		print "Schnell weg hier ";
+		print ".";
+		pause 0.5
+		print ".";
+		pause 0.5
+		print "."
+		pause 0.5
+		x += 1
+	endif
+	if number = 6 then
+		print "Die Tür ins freie ist abgeschlossen ..."
+		if hatMauerO[0, 4] then
+			print "Zum Glück hast du EINEN Schlüssel ..."
+			pause 1
+			print "KRICKS KRACKS"
+			pause 1
+			print "Geht nicht - Beim zurückgehen stolperst du ..."
+			pause 3
+			print "Fällst nach hinten ..."
+			pause 2
+			print "KRACKS"
+			pause 1
+			print "Leicht gegen die Tür ..."
+			pause 3
+			print "Aber die Tür gibt nach und du fällst hin."
+			pause 3
+			print "Und verlierst 0,9000019 Ausdauer!"
+			pause 3
+			print "Das heißt du hast noch gerunded genau 0 Ausdauer."
+			pause 4
+			print "Aber eigentlich 0,0000001..."
+			pause 2
+			print "Du hast gewonnen!"
+			end
+		else
+			print "Ohne Schlüssel wird's wohl nichts ..."
+			x += 1
+			pause 1
+		endif
+	endif
+	if number = 7 then hatMauerO[0, 4] = true
+	if number = 8 then
+		if startedMsec = -1 and kraft > 10 then startedMsec = msec
+	endif
+endsubroutine
+
+subroutine update()
+	if msec - startedMsec > 10000 and startedMsec >= 0 then
+		print
+		print "Da ist was explodiert!"
+		pause 1
+		startedMsec = -2
+		if x = 4 and y = 3 then
+			print "Du wurdest in die Luft gesprengt ..."
+			end
+		endif
+	endif
 endsubroutine
