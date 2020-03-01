@@ -1,0 +1,519 @@
+global hoehe
+global breite
+global raumBeschreibung$
+global hatMauerO
+global hatMauerS
+global gegner
+global gegnerKraft
+global gegnerAusdauer
+global gegnerName$
+global gegnerBeschreibung$
+global objekt
+global objektName$
+global objektBeschreibung$
+global objektKraftBonus
+global objektAusdauerBonus
+global objektGewonnen
+global knopf
+global knopfBeschreibung$
+global knopfMauerHinX
+global knopfMauerHinY
+global knopfMauerHinIstO
+global knopfMauerHinIstS
+global knopfMauerWegX
+global knopfMauerWegY
+global knopfMauerWegIstO
+global knopfMauerWegIstS
+global kraft
+global ausdauer
+global x
+global y
+global gewonnenBeschreibung$
+
+dim gegnerKraft(100)
+dim gegnerAusdauer(100)
+dim gegnerName$(100)
+dim gegnerBeschreibung$(100)
+dim objektName$(100)
+dim objektBeschreibung$(100)
+dim objektKraftBonus(100)
+dim objektAusdauerBonus(100)
+dim objektGewonnen(100)
+dim knopfBeschreibung$(100)
+dim knopfMauerHinX(100)
+dim knopfMauerHinY(100)
+dim knopfMauerHinIstO(100)
+dim knopfMauerHinIstS(100)
+dim knopfMauerWegX(100)
+dim knopfMauerWegY(100)
+dim knopfMauerWegIstO(100)
+dim knopfMauerWegIstS(100)
+
+outputvisible true
+editvisible false
+
+istLabyOk = false
+while istLabyOk = false
+	labyname$ = keyinput$("Welches Labyrinth (D/P)? ")
+	if labyname$ = "P" then
+		call labyPhoyh
+		istLabyOk = true
+	endif
+	if labyname$ = "A" then
+		call labyM1ngX1ao
+		istLabyOk = true
+	endif
+endwhile
+
+while true 
+cls
+print "Kraft: " ;
+print kraft
+print "Ausdauer: " ;
+print ausdauer
+print
+call macheKampf
+call zeigeRaum
+call zeigeKnopf
+call zeigeObjekt
+call zeigeWahl
+call macheWahl
+endwhile
+
+rem subroutines / functions
+
+subroutine zeigeRaum()
+if raumBeschreibung$[x,y] = "" then return
+print raumBeschreibung$[x,y]
+print
+endsubroutine
+
+subroutine zeigeKnopf()
+if knopf[x,y] = 0 then return
+k = knopf[x,y]
+print knopfBeschreibung$[k]
+print
+endsubroutine
+
+subroutine zeigeObjekt()
+if objekt[x,y] = 0 then return
+o = objekt[x,y]
+print objektBeschreibung$[o]
+print
+endsubroutine
+
+subroutine macheKampf()
+if gegner[x,y] = 0 then return
+g = gegner[x,y]
+print gegnerBeschreibung$[g]
+print
+print gegnerName$[g];
+print " Kraft: ";
+print gegnerKraft[g]
+print gegnerName$[g];
+print " Ausdauer: ";
+print gegnerAusdauer[g]
+print
+gA = gegnerAusdauer[g]
+gK = gegnerKraft[g]
+while ausdauer > 0 and gA > 0
+print "Du willst nicht verlieren! Deshalb schlägst du ihn. Er kriegt ";
+print kraft;
+print " Schaden."
+gA = gA - kraft
+p$ = keyinput$("")
+print "Jetzt hat er noch ";
+print gA;
+print "."
+print
+p$ = keyinput$("")
+if gA > 0 then
+	print "Leider aber auch gibt dein Gegner nicht so leicht auf. Er schlägt dich. Du bekommst ";
+	print gK;
+	print " Schaden."
+	p$ = keyinput$("")
+	ausdauer = ausdauer - gK
+	print "Du hast jetzt noch ";
+	print ausdauer;
+	print "."
+	print
+endif
+endwhile
+if ausdauer < 1 then call tod
+gegner[x,y] = 0
+print "Den Schlag hast du mit besonders viel Kraft gemacht. Du warst einfach zu motiviert. Du hast gegen ihn gewonnen!!!!!!!"
+p$ = keyinput$("")
+print "Und diesmal ohne Scherz! Hurra!"
+print
+endsubroutine
+
+subroutine zeigeWahl()
+print "Du kannst:";
+if kannN() then print " N";
+if kannO() then print " O";
+if kannS() then print " S";
+if kannW() then print " W";
+if objekt[x,y] > 0 then print " NIMM";
+if knopf[x,y] > 0 then print " BENUTZE";
+print 
+endsubroutine
+
+subroutine macheWahl()
+wahl$ = keyinput$("Deine Wahl: ")
+istWahlOk = false
+if kannS() and wahl$ = "S" then
+	y = y + 1
+	istWahlOk = true
+endif
+if kannN() and wahl$ = "N" then
+	y = y - 1
+	istWahlOk = true
+endif
+if kannW() and wahl$ = "W" then
+	x = x - 1
+	istWahlOk = true
+endif
+if kannO() and wahl$ = "O" then
+	x = x + 1
+	istWahlOk = true
+endif
+if objekt[x,y] > 0 and wahl$ = "NIMM" then
+	call nimmObjekt
+	istWahlOk = true
+endif
+if knopf[x,y] > 0 and wahl$ = "BENUTZE" then
+	call benutzeKnopf
+	istWahlOk = true
+endif
+if istWahlOk = false then p$ = keyinput$("Das geht nicht!!!")
+endsubroutine
+
+subroutine nimmObjekt()
+o = objekt[x,y]
+objekt[x,y] = 0
+print
+if objektKraftBonus[o] > 0 then 
+	print "Du hast ";
+	print objektKraftBonus[o];
+	print " Kraft dazu bekommen."
+	kraft = objektKraftBonus[o] + kraft
+endif
+if objektAusdauerBonus[o] > 0 then
+	print "Du hast ";
+	print objektAusdauerBonus[o];
+	print " Ausdauer dazu bekommen."
+	ausdauer = objektAusdauerBonus[o] + ausdauer
+endif
+if objektGewonnen[o] then call gewonnen
+p$ = keyinput$("")
+endsubroutine
+
+subroutine benutzeKnopf()
+k = knopf[x,y]
+khx = knopfMauerHinX[k]
+khy = knopfMauerHinY[k]
+kwx = knopfMauerWegX[k]
+kwy = knopfMauerWegY[k]
+istAnders = false
+print
+if knopfMauerHinIstO[k] and hatMauerO[khx,khy] = false then
+	hatMauerO[khx,khy] = true
+	istAnders = true
+endif
+if knopfMauerHinIstS[k] and hatMauerS[khx,khy] = false then
+	hatMauerS[khx,khy] = true
+	istAnders = true
+endif
+if knopfMauerWegIstO[k] and hatMauerO[kwx,kwy] then
+	hatMauerO[kwx,kwy] = false
+	istAnders = true
+endif
+if knopfMauerWegIstS[k] and hatMauerS[kwx,kwy] then
+	hatMauerS[kwx,kwy] = false
+	istAnders = true
+endif
+if istAnders then 
+	print "RUUUUUUUUUUMMMMMMMMMMMMMMMMMMSSSSS       irgendwo hörst du was lautes ..."
+else
+	print "Komisch. Man hört gar nichts."
+endif
+p$ = keyinput$("")
+endsubroutine
+
+subroutine gewonnen()
+print
+print gewonnenBeschreibung$
+print
+print "Ich hätte gerne Feedback. Perfekt(P), Ok(O), Schlecht(S). Danke, bis zum nächsten Mal. "
+end
+endsubroutine
+
+subroutine tod()
+print "Auch wenn du merkst, dass du nicht so fit wie am Anfang bist, versuchst du zurückzuschlagen. Doch irgendwas stimmt doch nicht. Dein Gegner bekommt kein Schaden! Hääääääääää?????????? Plötzlich kannst du dich einfach nicht mehr halten. Du fällst zurück..."
+p$ = keyinput$("")
+print
+print "Aber warum.................."
+print "Oh, nein!!!!!"
+print "Du denkst das nur. In echt hast du verloren, da du keine Ausdauer mehr hast. Leider hast du das Spiel VERLOREN!!!! Spiele das Spiel mit F5 nochmal. Viel Glück!!!!!"
+end
+endsubroutine
+
+function kannO()
+kannO = false
+if breite - x > 1 then
+	if not hatMauerO[x,y] then kannO = true
+endif
+endfunction
+
+function kannS()
+kannS = false
+if hoehe - y > 1 then
+	if not hatMauerS[x,y] then kannS = true
+endif
+endfunction
+
+function kannW()
+kannW = false
+if x > 0 then
+	if not hatMauerO[x-1,y] then kannW = true
+endif
+endfunction
+
+function kannN()
+kannN = false
+if y > 0 then
+	if not hatMauerS[x,y-1] then kannN = true
+endif
+endfunction
+
+rem ===================================
+rem Key Input
+rem ===================================
+
+function keyinput$(p$)
+	r$ = ""
+	k = 0
+	lastChar = 0
+	print p$;
+	while k <> 16777220 #RETURN
+		k = key
+		if k = 0 then
+			lastChar = 0
+		endif
+		if k <> lastChar and k <> 16777220 and k <> 16781571 then #RETURN or AltGr
+			a$ = getChar$(k)
+			if a$ <> "" then
+				lastChar = k
+				if a$ = chr(16777219) then #BACKSPACE
+					if length(r$) > 1 then
+						r$ = left(r$, length(r$) - 1)
+					else
+						r$ = ""
+					endif
+					print
+					print p$ + r$;
+				else
+					print a$;
+					r$ = r$ + a$
+				endif
+			endif
+		endif
+	endwhile
+	print
+	return r$
+endfunction
+
+function getChar$(k)
+	if k = 13 or k = 32 or k = 16777219 then #RETURN SPACE BACKSPACE
+		return chr(k)
+	endif
+	if (k > 64 and k < 91) or (k > 191 and k < 221) then
+		return chr(k)
+	endif
+	return ""
+endfunction
+
+rem LabyrinthVorbereiter
+
+subroutine labyInit()
+dim hatMauerO(breite, hoehe)
+dim hatMauerS(breite, hoehe)
+dim raumBeschreibung$(breite, hoehe)
+dim gegner(breite, hoehe)
+dim objekt(breite, hoehe)
+dim knopf(breite, hoehe)
+endsubroutine
+
+subroutine labyPhoyh()
+breite = 6
+hoehe = 8
+call labyInit
+kraft = 1
+ausdauer = 5
+x = 2
+y = 2
+for i = 0 to breite - 1
+	for j = 0 to hoehe - 1
+		raumBeschreibung$[i,j] = "Hier ist es finster. Zum Glück kannst Du den Bereich dennoch mit Deinem Feuerzeug erhellen - aber wie lange noch?"
+	next j
+next i
+raumBeschreibung$[2,2] = "Du hörst einige Schritte..."
+raumBeschreibung$[3,2] = "An der Tür nach Osten zeigt ein Schild, dass man nicht reingehen sollte."
+raumBeschreibung$[4,2] = "Der Kronsaal - von hier geht die Macht im Reich aus."
+raumBeschreibung$[2,3] = "In diesem Raum hängt an der Wand ein schönes Gemälde. Die Landschaft zeigt einige Hügel."
+raumBeschreibung$[3,3] = raumBeschreibung$[2,2]
+raumBeschreibung$[4,3] = "Hier gibt es ein Fenster, durch das man nach draußen schauen kann. Du bist offensichtlich im 2. oder 3. Stock."
+raumBeschreibung$[3,4] = "Oh, eine Sackgasse, gleich wieder zurück!"
+raumBeschreibung$[4,4] = raumBeschreibung$[2,3]
+raumBeschreibung$[2,6] = "Der Rüstungsraum mit allerlei Krams."
+hatMauerS[0,0] = true
+hatMauerS[1,0] = true
+hatMauerO[2,0] = true
+hatMauerO[4,0] = true
+hatMauerS[4,0] = true
+hatMauerS[1,1] = true
+hatMauerS[2,1] = true
+hatMauerS[3,1] = true
+hatMauerS[4,1] = true
+hatMauerO[0,2] = true
+hatMauerO[1,2] = true
+hatMauerS[3,2] = true
+hatMauerO[4,2] = true
+hatMauerO[1,3] = true
+hatMauerS[1,3] = true
+hatMauerS[3,3] = true
+hatMauerO[4,3] = true
+hatMauerO[0,4] = true
+hatMauerO[1,4] = true
+hatMauerO[2,4] = true
+hatMauerS[2,4] = true
+hatMauerS[3,4] = true
+hatMauerO[4,4] = true
+hatMauerS[4,4] = true
+hatMauerS[1,5] = true
+hatMauerS[2,5] = true
+hatMauerO[1,6] = true
+hatMauerS[1,6] = true
+hatMauerO[2,6] = true
+hatMauerS[2,6] = true
+hatMauerO[3,6] = true
+knopf[2,0] = 1
+knopf[4,0] = 2
+knopf[1,2] = 3
+knopf[3,4] = 4
+knopfBeschreibung$[1] = "Es gibt einen runden Schalter auf dem Boden."
+knopfMauerWegX[1] = 4
+knopfMauerWegY[1] = 2
+knopfMauerWegIstS[1] = true
+knopfBeschreibung$[2] = "Aha, ein eckiger Schalter an der Decke."
+knopfMauerHinX[2] = 5
+knopfMauerHinY[2] = 3
+knopfMauerHinIstS[2] = true
+knopfMauerWegX[2] = 0
+knopfMauerWegY[2] = 0
+knopfMauerWegIstS[2] = true
+knopfBeschreibung$[3] = "Eine Fernbedienung? Für was?"
+knopfMauerHinX[3] = 1
+knopfMauerHinY[3] = 5
+knopfMauerHinIstO[3] = true
+knopfMauerWegX[3] = 1
+knopfMauerWegY[3] = 6
+knopfMauerWegIstO[3] = true
+knopfMauerWegIstS[3] = true
+knopfBeschreibung$[4] = "An der Wand hängt ein Totenkopf, der eine knöcherne Zunge rausstreckt. Sie sieht irgendwie beweglich aus..."
+knopfMauerHinX[4] = 4
+knopfMauerHinY[4] = 2
+knopfMauerHinIstS[4] = true
+knopfMauerWegX[4] = 2
+knopfMauerWegY[4] = 4
+knopfMauerWegIstS[4] = true
+gegner[3,2] = 1
+gegner[4,2] = 1
+gegnerKraft[1] = 5
+gegnerAusdauer[1] = 10
+gegnerName$[1] = "Wächter"
+gegnerBeschreibung$[1] = "Vor Dir wartet einen grimmiger Wächter mit seinem Axtbeil!"
+objekt[2,6] = 1
+objekt[4,2] = 2
+objekt[4,6] = 3
+objektName$[1] = "Schwert"
+objektBeschreibung$[1] = "An der Wand ist ein Schwert gelehnt."
+objektKraftBonus[1] = 5
+objektName$[2] = "Krone"
+objektBeschreibung$[2] = "Was sucht denn da die Siegerkrone auf dem Boden?"
+objektGewonnen[2] = true
+objektName$[3] = "Zaubertrank"
+objektBeschreibung$[3] = "Es gibt da so ein Elixirschrank - und ein Fläschchen ist da aus drin... Zaubertrank?"
+objektAusdauerBonus[3] = 5
+gewonnenBeschreibung$ = "Hurra!!! Du hast es tatsächlich geschafft. Bravo, hätte ich echt nicht gedacht."
+endsubroutine
+
+subroutine labyM1ngX1ao()
+breite = 4
+hoehe = 4
+call labyInit
+kraft = 5
+ausdauer = 10
+x = 1
+y = 0
+raumBeschreibung$[1,1] = "Nichts Besonderes."
+raumBeschreibung$[0,0] = raumBeschreibung$[1,2]
+raumBeschreibung$[0,2] = "Du siehst ein Fenster, ausdem eine schöne Landwirtschaft zu sehen ist."
+raumBeschreibung$[1,0] = raumBeschreibung$[1,2]
+raumBeschreibung$[1,3] = raumBeschreibung$[1,2]
+raumBeschreibung$[2,0] = raumBeschreibung$[1,2]
+raumBeschreibung$[2,1] = "Du hörst Stimmen."
+raumBeschreibung$[2,2] = raumBeschreibung$[1,2]
+raumBeschreibung$[2,3] = "Ein Gemälde von einem gutem König ist zu sehen."
+hatMauerO[0,0] = true
+hatMauerO[0,1] = true
+hatMauerS[0,1] = true
+hatMauerS[0,2] = true
+hatMauerO[0,3] = true
+hatMauerO[2,2] = true
+hatMauerS[3,2] = true
+knopf[3,3] = 1
+knopf[0,1] = 2
+knopf[3,0] = 3
+knopfBeschreibung$[1] = "Hier ist eine Blume in der Vase. Warte, die Blume ist aus Holz. Ob man da was drücken kann?"
+knopfMauerWegX[1] = 0
+knopfMauerWegY[1] = 3
+knopfMauerWegIstO[1] = true
+knopfBeschreibung$[2] = "Ein ganz normaler roter Knopf an der Wand."
+knopfMauerWegX[2] = 2
+knopfMauerWegY[2] = 2
+knopfMauerWegIstO[2] = true
+knopfMauerHinX[2] = 2
+knopfMauerHinY[2] = 2
+knopfMauerHinIstS[2] = true
+knopfBeschreibung$[3] = "Du siehst ein Fenster, das voll unstabil ist. Drücken?"
+knopfMauerWegX[3] = 0
+knopfMauerWegY[3] = 0
+knopfMauerWegIstO[3] = true
+knopfMauerHinX[3] = 1
+knopfMauerHinY[3] = 0
+knopfMauerHinIstS[3] = true
+gegner[3,1] = 1
+gegnerKraft[1] = 20
+gegnerAusdauer[1] = 20
+gegnerName$[1] = "Wächterpaar"
+gegnerBeschreibung$[1] = "Du siehst ein Wächterpaar. Sie schlagen zusammen mit doppelter Kraft!"
+objekt[0,3] = 1
+objekt[1,2] = 2
+objekt[3,2] = 3
+objekt[3,1] = 4
+objektName$[1] = "Schwert"
+objektBeschreibung$[1] = "Sackgasse! Och manno. Warte mal noch............................................................................................. da ist noch was, oder nicht? Ein hübsches Schwert!!!!"
+objektKraftBonus[1] = 5
+objektName$[2] = "Zaubertrank"
+objektBeschreibung$[2] = "Du siehst einen Trank auf dem Steinboden."
+objektAusdauerBonus[2] = 5
+objektName$[3] = "Ausdauertrank"
+objektBeschreibung$[3] = "Auf dem Boden liegt ein Ausdauertrank."
+objektAusdauerBonus[3] = 6
+objektName$[4] = "Schlüssel"
+objektBeschreibung$[4] = "Du siehst ein Schlüssel im Zimmer. Aber zuerst das Wächterpaar töten."
+objektGewonnen[4] = true
+gewonnenBeschreibung$ = "Mit dem Schlüssel machst du das Gitter auf, da wo die Prinzessin eingefangen wurde. Sie ist super glücklich. Ihr geht zurück ins Königreich und habt zusammen ein schönes Leben!"
+endsubroutine
+
