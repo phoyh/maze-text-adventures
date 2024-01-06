@@ -67,7 +67,7 @@ while istLabyOk = false
 		call labyM1ngX1ao
 		istLabyOk = true
 	endif
-	if labyname$ = "M" then
+	if labyname$ = "U" then
 		call labyM1ngXU
 		istLabyOk = true
 	endif
